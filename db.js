@@ -13,4 +13,14 @@ var connection = mysql.createConnection({
     // database : 'esystem'
 });
 
+// var pool = mysql.createPool({
+//     connectionLimit : 5,
+//     host     : 'localhost',
+//     port     : '3306',
+//     user     : 'root',
+//     password : 'password',
+//     database : 'esystem'
+// });
+
 module.exports.connection = connection;
+// module.exports.pool = pool;
