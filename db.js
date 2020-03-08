@@ -5,6 +5,12 @@ var connection = mysql.createConnection({
     user     : 'zixinye',
     password : 'yezixin0612',
     database : 'ecsystem'
+
+    // host     : 'localhost',
+    // port     : '3306',
+    // user     : 'root',
+    // password : 'password',
+    // database : 'esystem'
 });
 
 module.exports.connection = connection;
