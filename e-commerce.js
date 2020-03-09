@@ -18,26 +18,28 @@ app.use(session({
 }));
 
 app.post('/registerUser', (req, res) => {
-    if (req.body.fname === undefined || req.body.lname === undefined || req.body.fname === "" || req.body.lname === "" ||
-        req.body.address === undefined || req.body.city === undefined || req.body.address === "" || req.body.city === "" ||
-        req.body.state === undefined || req.body.zip === undefined || req.body.state === "" || req.body.zip === "" ||
-        req.body.email === undefined || req.body.username === undefined || req.body.email === "" || req.body.username === "" ||
-        req.body.password === undefined || req.body.password === "")
+    if (req.body.fname === undefined || req.body.lname === undefined ||
+        req.body.address === undefined || req.body.city === undefined ||
+        req.body.state === undefined || req.body.zip === undefined ||
+        req.body.email === undefined || req.body.username === undefined ||
+        req.body.password === undefined)
         return res.json({"message": "The input you provided is not valid"});
-    connection.query(`SELECT * FROM userdata WHERE username = ?`, [req.body.username], (err, result) => {
-        if (result.length > 0)
-            return res.json({"message": "The input you provided is not valid"});
+    // connection.query(`SELECT * FROM userdata WHERE username = ?`, [req.body.username], (err, result) => {
+    //     if (result.length > 0)
+    //         return res.json({"message": "The input you provided is not valid"});
         let sql = `INSERT INTO userdata (fname, lname, address, city, state, zip, email, username, password) VALUES  (?,?,?,?,?,?,?,?,?)`;
         connection.query(sql, [req.body.fname, req.body.lname, req.body.address, req.body.city, req.body.state,
             req.body.zip, req.body.email, req.body.username, req.body.password], (err, result) =>{
-            if (err) throw(err);
-            return res.json({"message": req.body.fname + " was registered successfully"});
+            if (err)
+                return res.json({"message": "The input you provided is not valid"});
+            else
+                return res.json({"message": req.body.fname + " was registered successfully"});
         });
-    });
+    // });
 });
 
 app.post('/login', (req, res) => {
-    if (req.body.username === undefined || req.body.password === undefined || req.body.username === "" || req.body.password === "")
+    if (req.body.username === undefined || req.body.password === undefined)
         return res.json({"message": "There seems to be an issue with the username/password combination that you entered"});
     connection.query('SELECT * FROM userdata WHERE username = ?', [req.body.username], (err, result) => {
         if (err) throw(err);
@@ -69,7 +71,7 @@ app.post('/updateInfo', (req, res) => {
         return res.json({"message": "You are not currently logged in"});
     }
     connection.query('SELECT * FROM userdata WHERE username = ?', [req.body.username], (err, result1) => {
-        if (req.body.username === undefined || req.body.username === "" || result1.length <= 0 || req.body.username === req.session.user.name) {
+        if (req.body.username === undefined || result1.length <= 0 || req.body.username === req.session.user.name) {
             let sql = `UPDATE userdata SET `;
             let updateFlag = 0;
             for (property of Object.keys(req.body)) {
@@ -83,7 +85,7 @@ app.post('/updateInfo', (req, res) => {
             if(updateFlag == 1) {
                     sql = sql.substr(0, sql.length - 2);
                     sql += ` WHERE id = ` + req.session.user.id;
-                    console.log(sql);
+                    // console.log(sql);
                     connection.query(sql, [], (err) => {
                         if (err) throw(err);
                     });
@@ -107,19 +109,17 @@ app.post('/addProducts', (req, res) => {
         return res.json({"message": "You are not currently logged in"});
     if (req.session.user.name !== "jadmin")
         return res.json({"message": "You must be an admin to perform this action"});
-    if (req.body.asin === undefined || req.body.productName === undefined || req.body.asin === "" || req.body.productName === "" ||
-        req.body.productDescription === undefined || req.body.group === undefined || req.body.productDescription === "" || req.body.group === "")
+    if (req.body.asin === undefined || req.body.productName === undefined ||
+        req.body.productDescription === undefined || req.body.group === undefined)
         return res.json({"message": "The input you provided is not valid"});
-    connection.query(`SELECT * FROM productdata WHERE asin = ?`, [req.body.asin], (err, result) => {
-        if (err) throw(err);
-        if (result.length > 0)
+
+    let sql = "INSERT INTO productdata (asin, productName, productDescription, `groups`) VALUES (?,?,?,?)";
+    connection.query(sql, [req.body.asin, req.body.productName, req.body.productDescription, req.body.group], (error,) =>{
+        if (error)
             return res.json({"message": "The input you provided is not valid"});
-        let sql = "INSERT INTO productdata (asin, productName, productDescription, `groups`) VALUES (?,?,?,?)";
-        connection.query(sql, [req.body.asin, req.body.productName, req.body.productDescription, req.body.group], (error,) =>{
-            if (error) throw(error);
+        else
             return res.json({"message": req.body.productName + " was successfully added to the system"});
         });
-    });
 });
 
 app.post('/modifyProduct', (req, res) => {
@@ -128,15 +128,17 @@ app.post('/modifyProduct', (req, res) => {
         return res.json({"message": "You are not currently logged in"});
     if (req.session.user.name !== "jadmin")
         return res.json({"message": "You must be an admin to perform this action"});
-    if (req.body.asin === undefined || req.body.productName === undefined || req.body.asin === "" || req.body.productName === "" ||
-        req.body.productDescription === undefined || req.body.group === undefined || req.body.productDescription === "" || req.body.group === "")
+    if (req.body.asin === undefined || req.body.productName === undefined ||
+        req.body.productDescription === undefined || req.body.group === undefined)
         return res.json({"message": "The input you provided is not valid"});
     connection.query(`SELECT * FROM productdata WHERE asin = ?`, [req.body.asin], (err, result) => {
         if (result.length > 0){
             let sql = "UPDATE productdata SET productName = ? , productDescription = ?, `groups` = ? WHERE asin = ?";
             connection.query(sql, [req.body.productName, req.body.productDescription, req.body.group, req.body.asin], (err) => {
-                if (err) throw(err);
-                return res.json({"message": req.body.productName + " was successfully updated"});
+                if (err)
+                    return res.json({"message": "The input you provided is not valid"});
+                else
+                    return res.json({"message": req.body.productName + " was successfully updated"});
             });
         }
         else
@@ -167,7 +169,7 @@ app.post('/viewUsers', (req, res) => {
 });
 
 app.post('/viewProducts', (req, res) => {
-    let sql = `SELECT * FROM productdata WHERE asin = ? AND (productName LIKE ? OR productDescription LIKE ?) AND groups = ?` ;
+    let sql = "SELECT * FROM productdata WHERE asin = ? AND (productName LIKE ? OR productDescription LIKE ?) AND `groups` = ?" ;
     if (req.body.asin === undefined || req.body.asin === "") {
         req.body.asin = "%";
         sql = sql.replace("asin =", "asin LIKE");
@@ -175,7 +177,7 @@ app.post('/viewProducts', (req, res) => {
     if (req.body.keyword === undefined) req.body.keyword = "";
     if (req.body.group === undefined || req.body.group === "") {
         req.body.group = "%";
-        sql = sql.replace("groups =", "groups LIKE");
+        sql = sql.replace("`groups` =", "`groups` LIKE");
     }
     connection.query(sql, [req.body.asin, '%'+req.body.keyword+'%', '%'+req.body.keyword+'%', req.body.group], (err, result) => {
         if (err) throw(err);
@@ -194,7 +196,7 @@ app.post('/viewProducts', (req, res) => {
 app.post('/buyProducts', (req, res) => {
     if (req.session.user === undefined)
         return res.json({"message": "You are not currently logged in"});
-    if (req.body.products === undefined)
+    if (req.body.products === undefined || req.body.products.length == 0)
         return res.json({"message": "There are no products that match that criteria"});
     const purchaseId = req.session.user.name + new Date().getTime();
     let sql = `SELECT asin FROM productdata WHERE asin IN (`;
